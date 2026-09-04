@@ -66,3 +66,16 @@ insert into public.store_settings (id, whatsapp, instagram, tiktok) values (1, '
 -- أسعار مستقلة لكل مقاس
 alter table public.products add column if not exists size_prices jsonb not null default '{}'::jsonb;
 update public.products set size_prices = jsonb_build_object('30x40', coalesce(price,0), '40x60', coalesce(price,0), '50x70', coalesce(price,0)) where size_prices = '{}'::jsonb or size_prices is null;
+
+-- Custom design image uploads
+insert into storage.buckets (id, name, public)
+values ('customer-designs', 'customer-designs', true)
+on conflict (id) do update set public = true;
+
+create policy "Anyone can upload customer designs"
+on storage.objects for insert
+with check (bucket_id = 'customer-designs');
+
+create policy "Anyone can view customer designs"
+on storage.objects for select
+using (bucket_id = 'customer-designs');
